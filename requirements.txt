@@ -1,0 +1,4 @@
+mac-vendor-lookup
+rich
+jinja2
+requests
