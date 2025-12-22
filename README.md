@@ -57,6 +57,7 @@ Run as root:
 ```bash
 sudo python3 spectrum_hawk.py
 ```
+---
 
 ## 🎯 Key Features
 
@@ -93,7 +94,6 @@ Formats:
 - `.json`
 - `.txt`
 - `.html` (opens automatically)
----
 
 ## ⚠️ Legal Disclaimer
 
@@ -124,7 +124,7 @@ If you find this project useful:
 - ⭐ Star the repository
 - 🐞 Report bugs
 - 💡 Suggest features
-
+---
 
 ## 🦅 Author
 
