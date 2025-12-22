@@ -9,7 +9,6 @@ Spectrum Hawk is a powerful Python-based wireless network scanner designed for s
   - **IoT Device Discovery** – Find CCTV cameras, smart devices
   - **Network Mapping** – Understand network topology
   - **Targeted Attacks** – Focus on specific networks/devices instead of wasting time by attacking all networks 
----
 
 ## 🎯 Key Features
 
@@ -27,8 +26,6 @@ Spectrum Hawk is a powerful Python-based wireless network scanner designed for s
   - JSON (automation-friendly)
   - TXT (terminal readable)
   - HTML (visual report with auto-open)
-
----
 
 ## 📋 Requirements
 
@@ -72,8 +69,6 @@ jinja2
 requests
 ```
 
----
-
 ## ▶️ Usage
 
 Run as root:
@@ -87,7 +82,6 @@ sudo python3 spectrum_hawk.py
 - Pick wireless interface
 - Monitor mode enabled automatically
 
----
 
 ## 📁 Output
 
@@ -100,7 +94,6 @@ Formats:
 - `.json`
 - `.txt`
 - `.html` (opens automatically)
-
 ---
 
 ## ⚠️ Legal Disclaimer
@@ -110,14 +103,12 @@ This tool is for **AUTHORIZED SECURITY TESTING ONLY**.
 You must have explicit permission to scan any network.  
 The author is not responsible for misuse.
 
----
 
 ## 🧪 Tested On
 - Kali Linux
 - Ubuntu 22.04
 - Parrot OS
 
----
 
 ## 🤝 Contributing
 
@@ -127,7 +118,6 @@ Pull requests welcome:
 - Performance tuning
 - Export formats (PDF/CSV)
 
----
 
 ## ⭐ Support
 
@@ -136,7 +126,6 @@ If you find this project useful:
 - 🐞 Report bugs
 - 💡 Suggest features
 
----
 
 ## 🦅 Author
 
