@@ -4,7 +4,6 @@
 
 Spectrum Hawk is a powerful Python-based wireless network scanner designed for security professionals, network administrators, and ethical hackers. It identifies WiFi networks, enumerates connected devices, and provides detailed device fingerprinting—perfect for locating specific IoT/CCTV cameras and understanding network topology.
 
----
 ## Use Cases
   - **Security Auditing** – Identify all devices on a network
   - **IoT Device Discovery** – Find CCTV cameras, smart devices
