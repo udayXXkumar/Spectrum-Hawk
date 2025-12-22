@@ -28,7 +28,7 @@ sudo apt install -y aircrack-ng iw net-tools
 
 ### Clone Repository
 ```bash
-git clone https://github.com/yourusername/spectrum-hawk.git
+git clone https://github.com/udayXXkumar/Spectrum-Hawk.git
 cd spectrum-hawk
 ```
 
