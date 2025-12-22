@@ -8,25 +8,7 @@ Spectrum Hawk is a powerful Python-based wireless network scanner designed for s
   - **Security Auditing** – Identify all devices on a network
   - **IoT Device Discovery** – Find CCTV cameras, smart devices
   - **Network Mapping** – Understand network topology
-  - **Targeted Attacks** – Focus on specific networks/devices instead of wasting time by attacking all networks 
-
-## 🎯 Key Features
-
-- 📡 **Three Scanning Modes**
-  - **Quick Scan** – High signal networks only
-  - **Normal Scan** – Balanced coverage
-  - **Intense Scan** – Full spectrum analysis
-
-- 🔍 **Smart MAC Vendor Lookup**
-  - Offline OUI database (fast)
-  - Optional online lookup (macaddress.io)
-  - Automatic fallback handling
-
-- 📊 **Multi-Format Reports**
-  - JSON (automation-friendly)
-  - TXT (terminal readable)
-  - HTML (visual report with auto-open)
-
+  - **Targeted Attacks** – Focus on specific networks/devices instead of wasting time by attacking all networks
 ## 📋 Requirements
 
 ### System
@@ -75,6 +57,23 @@ Run as root:
 ```bash
 sudo python3 spectrum_hawk.py
 ```
+
+## 🎯 Key Features
+
+- 📡 **Three Scanning Modes**
+  - **Quick Scan** – High signal networks only
+  - **Normal Scan** – Balanced coverage
+  - **Intense Scan** – Full spectrum analysis
+
+- 🔍 **Smart MAC Vendor Lookup**
+  - Offline OUI database (fast)
+  - Optional online lookup (macaddress.io)
+  - Automatic fallback handling
+
+- 📊 **Multi-Format Reports**
+  - JSON (automation-friendly)
+  - TXT (terminal readable)
+  - HTML (visual report with auto-open)
 
 ### Interactive Setup
 - Select MAC lookup mode
