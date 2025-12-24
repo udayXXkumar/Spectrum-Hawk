@@ -44,19 +44,11 @@ source wifi-env/bin/activate
 pip install -r requirements.txt
 ```
 
-### requirements.txt
-```txt
-mac-vendor-lookup
-rich
-jinja2
-requests
-```
-
 ## ▶️ Usage
 
 Run as root:
 ```bash
-sudo python3 spectrum_hawk.py
+python3 spectrum_hawk.py
 ```
 ---
 
