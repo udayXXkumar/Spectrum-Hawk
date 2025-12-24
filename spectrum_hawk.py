@@ -9,23 +9,23 @@ import json
 import sys
 import urllib.request
 import urllib.error
+import venv
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from mac_vendor_lookup import MacLookup
 from rich.console import Console
 from jinja2 import Template
 import requests
 
-
-mac_cache = {}
-console = Console()
-mac_lookup = MacLookup()
-
+# Constants
 OUTPUT_DIR = "wifi_enum_output"
 SCAN_TIME = 30
 FOCUSED_SCAN_TIME = 10
+VENV_NAME = "shawk-venv"
+REQUIREMENTS_FILE = "requirements.txt"
 
 # Global lookup configuration
+mac_cache = {}
 USE_ONLINE_LOOKUP = False
 MACADDRESS_API_KEY = None
 SCAN_MODE = "normal"  # quick, normal, intense
@@ -33,6 +33,148 @@ SCAN_MODE = "normal"  # quick, normal, intense
 # OUI database configuration
 OUI_DB_PATH = os.path.join(OUTPUT_DIR, "oui_database.json")
 LOCAL_CACHE_PATH = os.path.join(OUTPUT_DIR, "mac_cache.json")
+
+# Global objects (will be initialized after venv check)
+console = None
+mac_lookup = None
+
+def setup_virtual_environment():
+    """Setup virtual environment and install requirements if needed"""
+    
+    # Create requirements.txt if it doesn't exist
+    if not os.path.exists(REQUIREMENTS_FILE):
+        with open(REQUIREMENTS_FILE, 'w') as f:
+            f.write("""rich>=13.0.0
+requests>=2.31.0
+jinja2>=3.1.0
+mac-vendor-lookup>=0.1.11""")
+        print(f"[+] Created {REQUIREMENTS_FILE}")
+    
+    # Check if virtual environment exists
+    if not os.path.exists(VENV_NAME):
+        print(f"[+] Creating virtual environment '{VENV_NAME}'...")
+        try:
+            # Create virtual environment
+            builder = venv.EnvBuilder(with_pip=True)
+            builder.create(VENV_NAME)
+            print(f"[✓] Virtual environment created: {VENV_NAME}")
+        except Exception as e:
+            print(f"[-] Failed to create virtual environment: {e}")
+            sys.exit(1)
+    
+    # Check if we're running from within the virtual environment
+    venv_python = os.path.join(VENV_NAME, "bin", "python")
+    
+    if not sys.executable.startswith(os.path.abspath(VENV_NAME)):
+        print(f"\n[!] WARNING: Not running from virtual environment")
+        print(f"[*] To run with virtual environment, use:")
+        print(f"    sudo {venv_python} {sys.argv[0]}")
+        print(f"\n[*] Or run the setup script:")
+        print(f"    chmod +x setup.sh && sudo ./setup.sh")
+        
+        # Check if requirements are installed in current environment
+        try:
+            import rich
+            import jinja2
+            from mac_vendor_lookup import MacLookup
+            print(f"\n[✓] Requirements already installed in current environment")
+            print(f"[*] You can continue, but using virtual environment is recommended")
+            
+            # Ask if user wants to continue
+            choice = input("\nContinue without virtual environment? (y/N): ").strip().lower()
+            if choice not in ['y', 'yes']:
+                print("[*] Exiting. Please run with virtual environment as shown above.")
+                sys.exit(1)
+                
+        except ImportError as e:
+            print(f"\n[-] Missing required package: {e}")
+            print(f"[*] Please install requirements or use virtual environment")
+            
+            # Try to install in virtual environment
+            print(f"\n[*] Installing requirements in virtual environment...")
+            try:
+                pip_cmd = f"{venv_python} -m pip install -r {REQUIREMENTS_FILE}"
+                subprocess.run(pip_cmd, shell=True, check=True)
+                print(f"[✓] Requirements installed in virtual environment")
+                print(f"\n[*] Now run: sudo {venv_python} {sys.argv[0]}")
+            except Exception as e:
+                print(f"[-] Failed to install requirements: {e}")
+            
+            sys.exit(1)
+    
+    # If we're in the virtual environment, ensure requirements are installed
+    else:
+        print(f"[✓] Running from virtual environment: {VENV_NAME}")
+        
+        # Check if requirements are installed
+        try:
+            import rich
+            import jinja2
+            from mac_vendor_lookup import MacLookup
+            print(f"[✓] All requirements are installed")
+        except ImportError as e:
+            print(f"[-] Missing package in virtual environment: {e}")
+            print(f"[*] Installing requirements...")
+            try:
+                pip_cmd = f"{sys.executable} -m pip install -r {REQUIREMENTS_FILE}"
+                subprocess.run(pip_cmd, shell=True, check=True)
+                print(f"[✓] Requirements installed successfully")
+            except Exception as e:
+                print(f"[-] Failed to install requirements: {e}")
+                sys.exit(1)
+    
+    return venv_python
+
+def initialize_globals():
+    """Initialize global objects after venv is confirmed"""
+    global console, mac_lookup
+    
+    # Now it's safe to import and initialize
+    from rich.console import Console
+    from mac_vendor_lookup import MacLookup
+    
+    console = Console()
+    mac_lookup = MacLookup()
+    
+    console.print(f"\n[bold green]Spectrum Hawk 🦅[/bold green]")
+    console.print(f"[dim]Advanced WiFi Network & Device Enumeration Tool[/dim]")
+
+def check_root_privileges():
+    """Check if running as root/sudo, if not ask user to run with sudo"""
+    
+    if os.geteuid() != 0:  # Not root
+        console.print("\n[bold red]✗ Root privileges required![/bold red]")
+        console.print("\n[yellow]This tool needs root access to:")
+        console.print("• Enable monitor mode on wireless interface")
+        console.print("• Run airodump-ng for network scanning")
+        console.print("• Manage network interfaces[/yellow]")
+        
+        venv_python = os.path.join(VENV_NAME, "bin", "python")
+        script_path = os.path.abspath(sys.argv[0])
+        
+        console.print(f"\n[cyan]Please run with sudo and virtual environment:[/cyan]")
+        console.print(f"[bold]sudo {venv_python} {script_path}[/bold]")
+        
+        # Show setup script option
+        if os.path.exists("setup.sh"):
+            console.print(f"\n[cyan]Or run the setup script:[/cyan]")
+            console.print(f"[bold]chmod +x setup.sh && sudo ./setup.sh[/bold]")
+        
+        # Option to restart with sudo
+        restart = input("\nRestart with sudo now? (y/N): ").strip().lower()
+        if restart in ['y', 'yes']:
+            try:
+                console.print("[green]Restarting with sudo and virtual environment...[/green]")
+                os.execvp('sudo', ['sudo', venv_python, script_path])
+            except Exception as e:
+                console.print(f"[red]Failed to restart: {e}[/red]")
+                console.print(f"[red]Please manually run: sudo {venv_python} {script_path}[/red]")
+        else:
+            console.print("[yellow]Exiting. Run with sudo when ready.[/yellow]")
+        
+        sys.exit(1)
+    
+    console.print("[green]✓ Running with root privileges[/green]")
 
 def update_all_databases():
     """Update both online and local vendor databases every time"""
@@ -554,6 +696,15 @@ def display_terminal(all_data):
         console.print("[dim]-" * 40)
 
 def main():
+    # Setup virtual environment FIRST (before any imports)
+    venv_python = setup_virtual_environment()
+    
+    # Now initialize global objects (safe to import)
+    initialize_globals()
+    
+    # Check for root privileges
+    check_root_privileges()
+    
     # Update ALL databases every time the tool starts
     update_all_databases()
     
