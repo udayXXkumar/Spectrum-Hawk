@@ -34,7 +34,7 @@ cd spectrum-hawk
 
 ### Create Virtual Environment
 ```bash
-python3 -m venv wifi-env
+python3 -m venv shawk-env
 source shawk-env/bin/activate
 ```
 
