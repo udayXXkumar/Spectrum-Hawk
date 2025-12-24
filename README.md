@@ -33,11 +33,9 @@ cd spectrum-hawk
 ```
 
 ### Create Virtual Environment
-Make sure to use SuperUserDo(sudo su)
 ```bash
-sudo su
 python3 -m venv wifi-env
-source wifi-env/bin/activate
+source shawk-env/bin/activate
 ```
 
 ### Install Python Dependencies
@@ -47,9 +45,9 @@ pip install -r requirements.txt
 
 ## ▶️ Usage
 
-Run as root(sudo su):
+Run as root: Make sure to use virtual environment(venv) and SuperUserDo(sudo)
 ```bash
-python3 spectrum_hawk.py
+ sudo ./shawk-env/bin/python spectrum_hawk.py
 ```
 ---
 
