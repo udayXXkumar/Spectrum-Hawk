@@ -7,7 +7,10 @@ import os
 import re
 import json
 import sys
-from datetime import datetime
+import urllib.request
+import urllib.error
+from datetime import datetime, timedelta
+from pathlib import Path
 from mac_vendor_lookup import MacLookup
 from rich.console import Console
 from jinja2 import Template
@@ -26,6 +29,179 @@ FOCUSED_SCAN_TIME = 10
 USE_ONLINE_LOOKUP = False
 MACADDRESS_API_KEY = None
 SCAN_MODE = "normal"  # quick, normal, intense
+
+# OUI database configuration
+OUI_DB_PATH = os.path.join(OUTPUT_DIR, "oui_database.json")
+LOCAL_CACHE_PATH = os.path.join(OUTPUT_DIR, "mac_cache.json")
+
+def update_all_databases():
+    """Update both online and local vendor databases every time"""
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    console.print("[cyan]Updating vendor databases...[/cyan]")
+    
+    # Update 1: Local OUI database (always update every time)
+    update_local_oui_database()
+    
+    # Update 2: mac-vendor-lookup package database (always update every time)
+    update_package_database()
+    
+    # Load existing MAC cache if available
+    load_mac_cache()
+
+def update_local_oui_database():
+    """Update our local JSON OUI database from online sources"""
+    
+    console.print("[dim]Updating local OUI database...[/dim]")
+    
+    # Sources to try (in order of preference)
+    oui_sources = [
+        ("https://standards-oui.ieee.org/oui/oui.csv", "IEEE OUI"),
+        ("https://macaddress.io/database-download/csv", "MAC Address.io"),
+    ]
+    
+    oui_data = {}
+    success = False
+    source_used = "Unknown"
+    
+    for url, source_name in oui_sources:
+        try:
+            console.print(f"[dim]Downloading from {source_name}...[/dim]")
+            
+            # Download the CSV file
+            response = urllib.request.urlopen(url, timeout=30)
+            csv_content = response.read().decode('utf-8')
+            
+            # Parse CSV
+            lines = csv_content.strip().split('\n')
+            for i, line in enumerate(lines):
+                if i == 0:  # Skip header
+                    continue
+                
+                try:
+                    parts = line.split(',')
+                    if len(parts) >= 3:
+                        mac_prefix = parts[0].strip().replace('-', ':').upper()
+                        vendor = parts[2].strip().strip('"')
+                        
+                        if mac_prefix and vendor and vendor != "Private":
+                            oui_data[mac_prefix] = vendor
+                except Exception:
+                    continue
+            
+            source_used = source_name
+            console.print(f"[green]✓ Downloaded {len(oui_data)} vendor entries from {source_name}[/green]")
+            success = True
+            break
+            
+        except urllib.error.URLError as e:
+            console.print(f"[yellow]Failed to download from {source_name}: {e.reason}[/yellow]")
+            continue
+        except Exception as e:
+            console.print(f"[yellow]Error with {source_name}: {e}[/yellow]")
+            continue
+    
+    if success and oui_data:
+        # Save the database
+        try:
+            with open(OUI_DB_PATH, 'w') as f:
+                json.dump({
+                    "updated": datetime.now().isoformat(),
+                    "source": source_used,
+                    "entries": oui_data
+                }, f, indent=2)
+            
+            console.print(f"[green]✓ Local OUI database updated with {len(oui_data)} entries[/green]")
+            return True
+                
+        except Exception as e:
+            console.print(f"[red]Failed to save local OUI database: {e}[/red]")
+            return False
+    else:
+        if os.path.exists(OUI_DB_PATH):
+            console.print("[yellow]Using existing local OUI database (download failed)[/yellow]")
+            return True
+        else:
+            console.print("[red]Could not create local OUI database[/red]")
+            return False
+
+def update_package_database():
+    """Update the mac-vendor-lookup package's database"""
+    
+    console.print("[dim]Updating package vendor database...[/dim]")
+    
+    try:
+        # Force update the package's database
+        mac_lookup.update_vendors()
+        console.print("[green]✓ Package vendor database updated[/green]")
+        return True
+    except Exception as e:
+        console.print(f"[yellow]Package update failed (using cached): {e}[/yellow]")
+        # Try alternative method
+        try:
+            # Some versions use different method names
+            if hasattr(mac_lookup, 'update_vendors'):
+                mac_lookup.update_vendors()
+            elif hasattr(mac_lookup, 'load_vendors'):
+                mac_lookup.load_vendors()
+            console.print("[green]✓ Package vendor database updated (alternative method)[/green]")
+            return True
+        except Exception as e2:
+            console.print(f"[yellow]Alternative update also failed: {e2}[/yellow]")
+            return False
+
+def load_mac_cache():
+    """Load MAC cache from previous sessions"""
+    global mac_cache
+    
+    if os.path.exists(LOCAL_CACHE_PATH):
+        try:
+            with open(LOCAL_CACHE_PATH, 'r') as f:
+                mac_cache = json.load(f)
+                console.print(f"[dim]Loaded {len(mac_cache)} cached MAC entries[/dim]")
+        except Exception as e:
+            console.print(f"[yellow]Could not load MAC cache: {e}[/yellow]")
+            mac_cache = {}
+
+def save_mac_cache():
+    """Save MAC cache for future sessions"""
+    try:
+        with open(LOCAL_CACHE_PATH, 'w') as f:
+            json.dump(mac_cache, f, indent=2)
+    except Exception as e:
+        console.print(f"[yellow]Could not save MAC cache: {e}[/yellow]")
+
+def local_lookup_from_db(mac):
+    """Lookup MAC vendor from our local OUI database (fastest)"""
+    
+    # Normalize MAC address
+    mac_clean = mac.upper().replace('-', ':')
+    
+    if not os.path.exists(OUI_DB_PATH):
+        return None
+    
+    try:
+        with open(OUI_DB_PATH, 'r') as f:
+            data = json.load(f)
+            oui_data = data.get("entries", {})
+        
+        # Try different prefix lengths (OUI can be 3, 4, or 5 bytes)
+        prefixes_to_try = [
+            mac_clean[:8],  # First 3 bytes (most common)
+            mac_clean[:11], # First 4 bytes
+            mac_clean[:14], # First 5 bytes
+        ]
+        
+        for prefix in prefixes_to_try:
+            if prefix in oui_data:
+                return oui_data[prefix]
+                
+    except Exception as e:
+        console.print(f"[dim]Local DB lookup error: {e}[/dim]")
+    
+    return None
 
 def configure_lookup():
     """Ask user for lookup preferences"""
@@ -139,7 +315,7 @@ def filter_aps_by_signal(csv_file, aps_dict):
             
             if SCAN_MODE == "quick":
                 # Quick mode: Only very strong signals (better than -60 dBm)
-                if signal > -75:
+                if signal > -60:
                     filtered_aps[bssid] = info
                     console.print(f"[green]✓ {info['essid']} ({signal}dBm) - Selected (Strong)[/green]")
                 else:
@@ -147,7 +323,7 @@ def filter_aps_by_signal(csv_file, aps_dict):
             
             elif SCAN_MODE == "normal":
                 # Normal mode: Mid to high signals (better than -75 dBm)
-                if signal > -85:
+                if signal > -75:
                     filtered_aps[bssid] = info
                     console.print(f"[yellow]✓ {info['essid']} ({signal}dBm) - Selected[/yellow]")
                 else:
@@ -219,18 +395,26 @@ def run_airodump(mon_iface, output_prefix, duration, channel=None, bssid=None):
 
 def safe_lookup(mac):
     """Lookup MAC vendor with user's preferred method"""
+    # Check cache first
     if mac in mac_cache:
         return mac_cache[mac]
-
-    # Always try local lookup first
-    try:
-        vendor = mac_lookup.lookup(mac)
+    
+    # 1. First try our local OUI database (fastest)
+    vendor = local_lookup_from_db(mac)
+    if vendor:
         mac_cache[mac] = vendor
         return vendor
-    except Exception:
-        console.print(f"[yellow]Local MAC lookup failed for {mac}[/yellow]")
     
-    # Only try online if user selected it
+    # 2. Try the package's database (updated)
+    try:
+        vendor = mac_lookup.lookup(mac)
+        if vendor and vendor != "Unknown":
+            mac_cache[mac] = vendor
+            return vendor
+    except Exception:
+        pass
+    
+    # 3. Only try online if user selected it
     if USE_ONLINE_LOOKUP:
         console.print(f"[yellow]Trying online lookup for {mac}...[/yellow]")
         
@@ -370,7 +554,10 @@ def display_terminal(all_data):
         console.print("[dim]-" * 40)
 
 def main():
-    # Ask user for lookup preferences first
+    # Update ALL databases every time the tool starts
+    update_all_databases()
+    
+    # Ask user for lookup preferences
     configure_lookup()
     
     # Ask user for scanning mode
@@ -415,6 +602,9 @@ def main():
     for bssid in filtered_aps:
         if bssid in all_aps:
             all_aps[bssid]['stations'] = filtered_aps[bssid].get('stations', [])
+    
+    # Save MAC cache for future sessions
+    save_mac_cache()
 
     display_terminal(filtered_aps)
     save_results(filtered_aps, timestamp)
