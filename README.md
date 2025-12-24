@@ -33,6 +33,7 @@ cd spectrum-hawk
 ```
 
 ### Create Virtual Environment
+Make sure to use SuperUserDo(sudo su)
 ```bash
 sudo su
 python3 -m venv wifi-env
@@ -46,7 +47,7 @@ pip install -r requirements.txt
 
 ## ▶️ Usage
 
-Run as root:
+Run as root(sudo su):
 ```bash
 python3 spectrum_hawk.py
 ```
