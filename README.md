@@ -34,8 +34,8 @@ cd spectrum-hawk
 
 ### Create Virtual Environment
 ```bash
-python3 -m venv shawk-env
-source shawk-env/bin/activate
+python3 -m venv shawk-venv
+source shawk-venv/bin/activate
 ```
 
 ### Install Python Dependencies
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 Run as root: Make sure to use virtual environment(venv) and SuperUserDo(sudo)
 ```bash
- sudo ./shawk-env/bin/python spectrum_hawk.py
+ sudo ./shawk-venv/bin/python spectrum_hawk.py
 ```
 ---
 
