@@ -11,8 +11,14 @@ Spectrum Hawk is a powerful Python-based wireless network scanner designed for s
   - **Targeted Attacks** – Focus on specific networks/devices instead of wasting time by attacking all networks
 ## 📋 Requirements
   - **Wi-Fi Adapter** - Use Wi-Fi adapter for scanning long range and better results
-![Logo](https://m.media-amazon.com/images/I/51ii8SWvsPL._SL1500_.jpg)
-
+<p align="center">
+  <a href="https://www.amazon.in/TP-Link-Wireless-Network-Supports-T2U/dp/B07P681N66?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&smid=AJ6SIZC8YQDZX&th=1">
+    <img src="https://m.media-amazon.com/images/I/51ii8SWvsPL._SL1500_.jpg" width="300">
+  </a>
+  <a href="https://www.amazon.in/Long-Range-Dual-Band-Wireless-External-Antennas/dp/B00VEEBOPG?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&psc=1&smid=A7TY3KN2D336C">
+    <img src="https://m.media-amazon.com/images/I/41Qo0EGG4TL._SL1000_.jpg" width="300">
+  </a>
+</p>
 ### System
 - Linux (Kali Linux recommended)
 - Wireless adapter supporting **monitor mode**
