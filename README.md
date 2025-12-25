@@ -19,6 +19,7 @@ Spectrum Hawk is a powerful Python-based wireless network scanner designed for s
     <img src="https://m.media-amazon.com/images/I/41Qo0EGG4TL._SL1000_.jpg" width="300">
   </a>
 </p>
+
 ### System
 - Linux (Kali Linux recommended)
 - Wireless adapter supporting **monitor mode**
