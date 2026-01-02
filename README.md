@@ -2,7 +2,7 @@
 
 **Advanced WiFi Network & Device Enumeration Tool**
 
-Spectrum Hawk is a powerful Python-based wireless network scanner designed for security professionals, network administrators, and ethical hackers. It identifies WiFi networks, finds connected devices, and provides names of the connected devices of each network without authetication/connecting to network. It is useful when locating specific IoT/CCTV cameras from multiple wifi's so we can focus on attacking that specific wifi instead of wasting time on recon, scanning and attacking other wifi's
+Spectrum Hawk is a powerful Python-based wireless network scanner designed for security professionals, network administrators, and ethical hackers. It identifies WiFi networks, finds connected devices, and provides names of the connected devices of each network without authentication/connecting to network. It is useful when locating specific IoT/CCTV cameras from multiple wifi's so we can focus on attacking that specific wifi instead of wasting time on recon, scanning and attacking other wifi's
 
 ## Use Cases
   - **Security Auditing** – Identify all devices on a network
